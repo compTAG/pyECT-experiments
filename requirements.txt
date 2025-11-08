@@ -1,4 +1,4 @@
-pyect==0.1.4
 numpy
 pandas
 tqdm
+pyect

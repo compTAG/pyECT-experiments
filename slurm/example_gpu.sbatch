@@ -6,10 +6,10 @@
 ## All other lines are read by the shell.
 
 ## Specify the account to use; you must use your priority account.
-##SBATCH --account=priority-
+#SBATCH --account=priority-brittanyfasy
 
 ## Use the gpupriority partition.
-#SBATCH --partition=gputest
+#SBATCH --partition=gpupriority
 
 ## Number of CPUs to allocate. Note that in the slurm, CPUs correspond to
 ## logical processors, not physical cores.
@@ -50,29 +50,38 @@ nvidia-smi -i "${CUDA_VISIBLE_DEVICES}"
 # Print the date again.
 date
 
-# Setup the python env
-module load python/3.9.6
+module load python-isal/0.11.0-GCCcore-10.3.0
 
 # Clone the latest version of the pyECT-experiments repo
 if [ ! -d "$HOME/pyECT-experiments" ]; then
-    git clone https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/compTAG/pyECT-experiments.git "$HOME/pyECT-experiments"
+    git clone git@github.com:compTAG/pyECT-experiments.git "$HOME/pyECT-experiments"
+else
+    cd "$HOME/pyECT-experiments" || exit 1
+    git pull origin main
+
 fi
-cd "$HOME/pyECT-experiments" || exit 1
+
+# move to pyECT experiments repo
+cd $HOME/pyECT-experiments || exit 1
 
 ## create new virtualenv if doesn't exist, otherwise load 'pyect-experiments' env
 if [ ! -d "$HOME/pyect-experiments-env" ]; then
     python3 -m venv "$HOME/pyect-experiments-env"
-    source "$HOME/pyect-experiments-env/bin/activate"
-    pip install --upgrade pip
-    pip install -r requirements.txt
-else
-    source "$HOME/pyect-experiments-env/bin/activate"
 fi
+
+source "$HOME/pyect-experiments-env/bin/activate"
+which python
+python --version
+which pip
+pip install --upgrade pip
+cat requirements.txt
+pip install -r requirements.txt
+pip list
 
 # check if datatest_images_1024.npz file exists, if not create it and generate test images
 if [ ! -f "data/test_images_1024.npz" ]; then
     cd data
-    python data/generate_test_images.py
+    python generate_test_images.py
     cd ..
 fi
 
