@@ -22,7 +22,7 @@
 #SBATCH --gres=gpu:a100:1
 
 ## Maximum job run time. Format is days-HH:MM:SS.
-#SBATCH --time=0-00:01:00
+#SBATCH --time=0-00:05:00
 
 ## Set job name.
 #SBATCH --job-name=gpupriority-example
