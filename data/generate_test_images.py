@@ -24,5 +24,5 @@ def generate_test_images(n: int = 1000, size: int = 128) -> None:
 
 if __name__ == "__main__":
     SIZE = 1024 
-    NUM_IMGS = 1000
+    NUM_IMGS = 10
     generate_test_images(n=NUM_IMGS, size=SIZE)
