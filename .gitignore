@@ -6,3 +6,6 @@
 *.npy
 *.pkl
 *.csv
+
+# compiled binaries
+*.so
