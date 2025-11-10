@@ -88,11 +88,12 @@ fi
 ## ----- EXPERIMENTS -----
 
 # Create variables for number of directions and timesteps
+EXPERIMENT_NAME="wect_pyECT"
 NUM_DIRECTIONS=16
 NUM_TIMESTEPS=128
 DEVICE="cuda"
 
-OUTPUT_PATH="results/wect_pyECT/${NUM_DIRECTIONS}_dirs_${NUM_TIMESTEPS}_timesteps_cuda.csv"
+OUTPUT_PATH="results/${EXPERIMENT_NAME}/${NUM_DIRECTIONS}_dirs_${NUM_TIMESTEPS}_timesteps_cuda.csv"
 
 # Run the python script
-python experiments/wect_pyECT.py --image_path="data/test_images_1024.npz" --output_path="results/test1.csv" --num_directions=$NUM_DIRECTIONS --num_timesteps=$NUM_TIMESTEPS --device=$DEVICE --batch_size=1
+python experiments/${EXPERIMENT_NAME}.py --image_path="data/test_images_1024.npz" --output_path=$OUTPUT_PATH --num_directions=$NUM_DIRECTIONS --num_timesteps=$NUM_TIMESTEPS --device=$DEVICE --batch_size=1

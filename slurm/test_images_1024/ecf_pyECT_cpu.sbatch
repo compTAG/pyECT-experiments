@@ -58,7 +58,7 @@ fi
 ## ----- EXPERIMENTS -----
 
 # Create variables for number of directions and timesteps
-EXPERIMENT_NAME="wect_pyECT"
+EXPERIMENT_NAME="ecf_pyECT"
 NUM_DIRECTIONS=16
 NUM_TIMESTEPS=128
 DEVICE="cpu"
