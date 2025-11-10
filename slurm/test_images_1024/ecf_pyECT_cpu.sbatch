@@ -59,16 +59,15 @@ fi
 
 # Create variables for number of directions and timesteps
 EXPERIMENT_NAME="ecf_pyECT"
-NUM_DIRECTIONS=16
 NUM_TIMESTEPS=128
 DEVICE="cpu"
 DATASET="test_images_1024"
 
-OUTPUT_PATH="results/${DATASET}/${EXPERIMENT_NAME}/${NUM_DIRECTIONS}_dirs_${NUM_TIMESTEPS}_timesteps_${DEVICE}.csv"
+OUTPUT_PATH="results/${DATASET}/${EXPERIMENT_NAME}/${NUM_TIMESTEPS}_timesteps_${DEVICE}.csv"
 
 # ensure directory exists
 DIR_NAME=$(dirname "$OUTPUT_PATH")
 mkdir -p "$DIR_NAME"
 
 # Run the python script
-python experiments/${EXPERIMENT_NAME}.py --image_path="data/${DATASET}.npz" --output_path=$OUTPUT_PATH --num_directions=$NUM_DIRECTIONS --num_timesteps=$NUM_TIMESTEPS --device=$DEVICE --batch_size=1
+python experiments/${EXPERIMENT_NAME}.py --image_path="data/${DATASET}.npz" --output_path=$OUTPUT_PATH  --num_timesteps=$NUM_TIMESTEPS --device=$DEVICE --batch_size=1
