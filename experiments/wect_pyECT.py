@@ -29,7 +29,7 @@ def time_wect_cuda(img: torch.Tensor, dirs: torch.Tensor, num_heights: int) -> T
     cmplx = weighted_freudenthal(img.cuda())
 
     # GPU warm-up
-    for _ in range(10):  # run a few times to avoid first-run overhead
+    for _ in range(100):  # run a few times to avoid first-run overhead
         _ = wect(cmplx)
     torch.cuda.synchronize()
 
@@ -58,7 +58,7 @@ def time_wect_mps(img: torch.Tensor, dirs: torch.Tensor, num_heights: int) -> Tu
     cmplx = weighted_freudenthal(img)
 
     # GPU warm-up
-    for _ in range(10):  # run a few times to avoid first-run overhead
+    for _ in range(100):  # run a few times to avoid first-run overhead
         _ = wect(cmplx)
 
 

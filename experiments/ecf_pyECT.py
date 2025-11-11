@@ -25,7 +25,7 @@ def time_ecf_cuda(img: torch.Tensor, num_heights: int) -> Tuple[torch.Tensor, fl
     ecf = Image_ECF_2D(num_heights).cuda()
 
     # GPU warm-up
-    for _ in range(10):  # run a few times to avoid first-run overhead
+    for _ in range(100):  # run a few times to avoid first-run overhead
         _ = ecf(img)
     torch.cuda.synchronize()
 
@@ -50,7 +50,7 @@ def time_ecf_mps(img: torch.Tensor, num_heights: int) -> Tuple[torch.Tensor, flo
     ecf = Image_ECF_2D(num_heights)
 
     # GPU warm-up
-    for _ in range(10):  # run a few times to avoid first-run overhead
+    for _ in range(100):  # run a few times to avoid first-run overhead
         _ = ecf(img)
 
 
