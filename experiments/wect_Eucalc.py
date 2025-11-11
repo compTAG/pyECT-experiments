@@ -15,7 +15,7 @@ import sys
 sys.path.append('./experiments/eucalc')
 import eucalc
 
-def time_wect_cpu(img: torch.Tensor, dirs: torch.Tensor, num_heights: int) -> Tuple[torch.Tensor, float]:
+def time_wect_cpu(img: np.array, dirs: torch.Tensor, num_heights: int) -> Tuple[torch.Tensor, float]:
     img = (img - img.min()) / (img.max() - img.min())
     cplx = eucalc.EmbeddedComplex(img)
     start_time = time.perf_counter()
@@ -27,12 +27,10 @@ def time_wect_cpu(img: torch.Tensor, dirs: torch.Tensor, num_heights: int) -> Tu
 
     return None, elapsed_time
 
-def compute_wect(img: torch.Tensor, dirs: torch.Tensor, num_heights: int) -> Tuple[float, str]:
-    device_type = img.device.type
-
+def compute_wect(img: np.array, dirs: torch.Tensor, num_heights: int) -> Tuple[float, str]:
     _, elapsed_time = time_wect_cpu(img, dirs, num_heights)
 
-    return elapsed_time, device_type
+    return elapsed_time, "cpu"
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run WECT experiments on image data.")
@@ -67,9 +65,8 @@ def main():
         batch_images = all_images[start_idx:end_idx]
 
         for i, img_np in enumerate(batch_images):
-            img_tensor = torch.tensor(img_np, dtype=torch.float32).to("cpu")
 
-            elapsed_time, device_type = compute_wect(img_tensor, dirs, args.num_timesteps)
+            elapsed_time, device_type = compute_wect(img_np, dirs, args.num_timesteps)
 
             with open(args.output_path, "a") as f_out:
                 row = [
