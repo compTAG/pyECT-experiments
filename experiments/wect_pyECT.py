@@ -102,6 +102,8 @@ def parse_args():
 def main():
     args = parse_args()
 
+    torch.set_grad_enabled(False)
+
     if args.device == "cuda" and torch.cuda.is_available():
         device = torch.device("cuda")
     elif args.device == "mps" and torch.backends.mps.is_available():
