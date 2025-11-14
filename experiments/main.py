@@ -18,7 +18,7 @@ from framework.implementation.pyect import (
     direction_sampler_2d,
     direction_sampler_3d
 )
-from framework.implementation.eucalc import Eucalc_WECT_CPU_Implementation
+from framework.implementation.eucalc_cpu import Eucalc_WECT_CPU_Implementation
 from framework.implementation.fast_topology import FastTopology_Image_ECF_CPU_Implementation
 
 INVARIANT_TYPES = [

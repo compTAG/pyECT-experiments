@@ -22,7 +22,7 @@
 #SBATCH --gres=gpu:a100:1
 
 ## Maximum job run time. Format is days-HH:MM:SS.
-#SBATCH --time=0-00:05:00
+#SBATCH --time=0-00:59:00
 
 ## Set job name.
 #SBATCH --job-name=gpupriority-example
@@ -107,7 +107,7 @@ for NUM_DIRECTIONS in "${DIRECTIONS[@]}"; do
 
     echo "Running: directions=$NUM_DIRECTIONS, timesteps=$NUM_TIMESTEPS"
 
-    python experiments-clean/main.py \
+    python experiments/main.py \
       --data_path="data/${DATASET}.npz" \
       --data_type=image \
       --invariant="${INVARIANT}" \
@@ -116,7 +116,8 @@ for NUM_DIRECTIONS in "${DIRECTIONS[@]}"; do
       --num_directions="${NUM_DIRECTIONS}" \
       --num_timesteps="${NUM_TIMESTEPS}" \
       --device="${DEVICE}" \
-      --batch_size=1
+      --batch_size=1 \
+      --cores=1
 
   done
 done

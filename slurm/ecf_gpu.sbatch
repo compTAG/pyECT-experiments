@@ -107,7 +107,7 @@ for NUM_DIRECTIONS in "${DIRECTIONS[@]}"; do
 
     echo "Running: directions=$NUM_DIRECTIONS, timesteps=$NUM_TIMESTEPS"
 
-    python experiments-clean/main.py \
+    python experiments/main.py \
       --data_path="data/${DATASET}.npz" \
       --data_type=image \
       --invariant="${INVARIANT}" \

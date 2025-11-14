@@ -6,10 +6,10 @@
 ## Basic parameters
 ##
 #SBATCH --account=group-brittanyfasy     	# specify the account to use if using a priority partition
-#SBATCH --partition=test                # queue partition to run the job in
+#SBATCH --partition=priority                # queue partition to run the job in
 #SBATCH --cpus-per-task=1               # number of cores to allocate
 #SBATCH --mem=2G                        # ammount of Memory allocated
-#SBATCH --time=0-00:05:00               # maximum job run time in days-hours:minutes:secconds
+#SBATCH --time=0-00:59:00               # maximum job run time in days-hours:minutes:secconds
 #SBATCH --job-name=example              # job name
 #SBATCH --output=example-%j.out         # standard output from job
 #SBATCH --error=example-%j.err          # standard error from job
@@ -86,7 +86,8 @@ for NUM_DIRECTIONS in "${DIRECTIONS[@]}"; do
       --num_directions="${NUM_DIRECTIONS}" \
       --num_timesteps="${NUM_TIMESTEPS}" \
       --device="${DEVICE}" \
-      --batch_size=1
+      --batch_size=1 \
+      --cores=1
 
   done
 done
