@@ -88,17 +88,35 @@ fi
 ## ----- EXPERIMENTS -----
 
 # Create variables for number of directions and timesteps
-EXPERIMENT_NAME="wect_pyECT"
-NUM_DIRECTIONS=16
-NUM_TIMESTEPS=128
+INVARIANT="ecf"
+IMPLEMENTATION_NAME="pyECT"
 DEVICE="cuda"
 DATASET="test_images_1024"
 
-OUTPUT_PATH="results/${DATASET}/${EXPERIMENT_NAME}/${NUM_DIRECTIONS}_dirs_${NUM_TIMESTEPS}_timesteps_${DEVICE}.csv"
+DIRECTIONS=(0)
+TIMESTEPS=(10 100 1000 10000)
 
-# ensure directory exists
-DIR_NAME=$(dirname "$OUTPUT_PATH")
-mkdir -p "$DIR_NAME"
+for NUM_DIRECTIONS in "${DIRECTIONS[@]}"; do
+  for NUM_TIMESTEPS in "${TIMESTEPS[@]}"; do
+    
+    OUTPUT_PATH="results/${DATASET}/${INVARIANT}/${IMPLEMENTATION_NAME}/${NUM_DIRECTIONS}_dirs_${NUM_TIMESTEPS}_timesteps_${DEVICE}.csv"
 
-# Run the python script
-python experiments/${EXPERIMENT_NAME}.py --image_path="data/test_images_1024.npz" --output_path=$OUTPUT_PATH --num_directions=$NUM_DIRECTIONS --num_timesteps=$NUM_TIMESTEPS --device=$DEVICE --batch_size=1
+    # ensure directory exists
+    DIR_NAME=$(dirname "$OUTPUT_PATH")
+    mkdir -p "$DIR_NAME"
+
+    echo "Running: directions=$NUM_DIRECTIONS, timesteps=$NUM_TIMESTEPS"
+
+    python experiments-clean/main.py \
+      --data_path="data/${DATASET}.npz" \
+      --data_type=image \
+      --invariant="${INVARIANT}" \
+      --implementation_name="${IMPLEMENTATION_NAME}" \
+      --output_path="${OUTPUT_PATH}" \
+      --num_directions="${NUM_DIRECTIONS}" \
+      --num_timesteps="${NUM_TIMESTEPS}" \
+      --device="${DEVICE}" \
+      --batch_size=1
+
+  done
+done

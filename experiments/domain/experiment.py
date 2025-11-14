@@ -1,0 +1,10 @@
+class ExperimentParameters:
+    data_path: str
+    data_type: str
+    invariant: str
+    implementation_name: str
+    output_path: str
+    num_directions: int
+    num_timesteps: int
+    device: str
+    batch_size: int
