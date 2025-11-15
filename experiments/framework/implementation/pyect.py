@@ -282,7 +282,7 @@ class PyECT_Compiled_WECT_CPU_Implementation(I_Implementation):
         )
 
         # Warm-up
-        for _ in range(20):
+        for _ in range(100):
             _ = compiled_wect(cmplx)
 
         # Compute
@@ -334,7 +334,7 @@ class PyECT_Compiled_WECT_CUDA_Implementation(I_Implementation):
         )
 
         # Warm-up
-        for _ in range(20):
+        for _ in range(100):
             _ = compiled_wect(cmplx)
         torch.cuda.synchronize()
 
@@ -385,7 +385,7 @@ class PyECT_Compiled_WECT_MPS_Implementation(I_Implementation):
         )
 
         # Warm-up
-        for _ in range(20):
+        for _ in range(100):
             _ = compiled_wect(cmplx)
         torch.mps.synchronize()
 
@@ -420,7 +420,7 @@ class PyECT_Compiled_Image_ECF_CPU_Implementation(I_Implementation):
         )
 
         # Warm-up
-        for _ in range(20):
+        for _ in range(100):
             _ = compiled_ecf(data)
 
         t0 = time.perf_counter()
@@ -451,7 +451,7 @@ class PyECT_Compiled_Image_ECF_CUDA_Implementation(I_Implementation):
             dynamic=False
         )
 
-        for _ in range(20):
+        for _ in range(100):
             _ = compiled_ecf(data)
         torch.cuda.synchronize()
 
@@ -489,7 +489,7 @@ class PyECT_Compiled_Image_ECF_MPS_Implementation(I_Implementation):
         )
 
         # Warm-up
-        for _ in range(20):
+        for _ in range(100):
             _ = compiled_ecf(data)
         torch.mps.synchronize()
 
