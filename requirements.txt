@@ -1,7 +1,8 @@
-pyect==0.1.4
+pyect==0.1.5
 numpy
 pandas
 tqdm
 gudhi
 opencv-python
 Pillow
+trimesh

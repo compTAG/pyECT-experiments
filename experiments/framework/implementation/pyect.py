@@ -12,18 +12,20 @@ def direction_sampler_2d(num_directions: int) -> torch.Tensor:
 def direction_sampler_3d(num_directions: int) -> torch.Tensor:
     return sample_directions_3d(num_directions)
 
-class PyECT_WECT_CPU_Implementation(I_Implementation):
+######################################################################
+#                 UNCOMPILED PYECT WECT IMPLEMENTATIONS
+######################################################################
+class PyECT_Uncompiled_WECT_CPU_Implementation(I_Implementation):
 
     def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1) -> ImplementationResult:
         result = ImplementationResult()
         result.device_used = "cpu"
 
-        # Normalize
-        data_norm = (data - data.min()) / (data.max() - data.min())
+        torch.set_grad_enabled(False)
 
         # 1. Construct complex
         t0 = time.perf_counter()
-        cmplx = weighted_freudenthal(data_norm)
+        cmplx = weighted_freudenthal(data)
         result.complex_construction_time = time.perf_counter() - t0
 
         # 2. Compute WECT
@@ -38,10 +40,12 @@ class PyECT_WECT_CPU_Implementation(I_Implementation):
         result.value = values.cpu()
         return result
 
-class PyECT_WECT_CUDA_Implementation(I_Implementation):
+class PyECT_Uncompiled_WECT_CUDA_Implementation(I_Implementation):
     def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1) -> ImplementationResult:
         result = ImplementationResult()
         result.device_used = "cuda"
+
+        torch.set_grad_enabled(False)
 
         # ensure all tensors are on GPU
         data = data.cuda()
@@ -83,11 +87,13 @@ class PyECT_WECT_CUDA_Implementation(I_Implementation):
         return result
 
 
-class PyECT_WECT_MPS_Implementation(I_Implementation):
+class PyECT_Uncompiled_WECT_MPS_Implementation(I_Implementation):
 
     def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1) -> ImplementationResult:
         result = ImplementationResult()
         result.device_used = "mps"
+
+        torch.set_grad_enabled(False)
 
         directions = directions.to("mps")
         data = data.to("mps")
@@ -122,12 +128,17 @@ class PyECT_WECT_MPS_Implementation(I_Implementation):
 
 from pyect import Image_ECF_2D
 
+######################################################################
+#                 UNCOMPILED PYECT IMAGE-ECF IMPLEMENTATIONS
+######################################################################
 
-class PyECT_Image_ECF_CPU_Implementation(I_Implementation):
+class PyECT_Uncompiled_Image_ECF_CPU_Implementation(I_Implementation):
 
     def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1) -> ImplementationResult:
         result = ImplementationResult()
         result.device_used = "cpu"
+
+        torch.set_grad_enabled(False)
 
         # Construct ECF object (negligible time, counted as computation)
         ecf = Image_ECF_2D(num_heights)
@@ -145,14 +156,15 @@ class PyECT_Image_ECF_CPU_Implementation(I_Implementation):
         return result
 
 
-class PyECT_Image_ECF_CUDA_Implementation(I_Implementation):
+class PyECT_Uncompiled_Image_ECF_CUDA_Implementation(I_Implementation):
 
     def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1) -> ImplementationResult:
         result = ImplementationResult()
         result.device_used = "cuda"
 
+        torch.set_grad_enabled(False)
+
         # Move data to GPU
-        img = (data - data.min()) / (data.max() - data.min())
         img = img.cuda()
 
         # Construct ECF object
@@ -181,14 +193,15 @@ class PyECT_Image_ECF_CUDA_Implementation(I_Implementation):
         return result
 
 
-class PyECT_Image_ECF_MPS_Implementation(I_Implementation):
+class PyECT_Uncompiled_Image_ECF_MPS_Implementation(I_Implementation):
 
     def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1) -> ImplementationResult:
         result = ImplementationResult()
         result.device_used = "mps"
 
-        # Normalize + move to MPS
-        img = (data - data.min()) / (data.max() - data.min())
+        torch.set_grad_enabled(False)
+
+        # Move to MPS
         img = img.to("mps")
 
         # Construct ECF object
@@ -210,4 +223,238 @@ class PyECT_Image_ECF_MPS_Implementation(I_Implementation):
         result.vectorization_time = 0.0
 
         result.value = ecf_values.cpu()
+        return result
+
+######################################################################
+#                   COMPILED PYECT WECT IMPLEMENTATIONS
+######################################################################
+
+class PyECT_Compiled_WECT_CPU_Implementation(I_Implementation):
+
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1):
+        result = ImplementationResult()
+        result.device_used = "cpu"
+
+        torch.set_grad_enabled(False)
+
+        # 1. Construct complex
+        t0 = time.perf_counter()
+        cmplx = weighted_freudenthal(data)
+        result.complex_construction_time = time.perf_counter() - t0
+
+        # 2. Compiled WECT
+        wect = WECT(directions, num_heights).eval()
+        compiled_wect = torch.compile(
+            wect,
+            backend="inductor",
+            mode="max-autotune",
+            dynamic=True
+        )
+
+        # Warm-up
+        for _ in range(20):
+            _ = compiled_wect(cmplx)
+
+        # Compute
+        t1 = time.perf_counter()
+        values = compiled_wect(cmplx)
+        result.computation_time = time.perf_counter() - t1
+
+        result.vectorization_time = 0.0
+        result.value = values.cpu()
+        return result
+
+
+class PyECT_Compiled_WECT_CUDA_Implementation(I_Implementation):
+
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1):
+        result = ImplementationResult()
+        result.device_used = "cuda"
+
+        torch.set_grad_enabled(False)
+
+        data = data.cuda()
+        directions = directions.cuda()
+
+        # Complex construction
+        start = torch.cuda.Event(enable_timing=True)
+        end = torch.cuda.Event(enable_timing=True)
+
+        start.record()
+        cmplx = weighted_freudenthal(data)
+        end.record()
+        torch.cuda.synchronize()
+        result.complex_construction_time = start.elapsed_time(end) / 1000.0
+
+        # Compile WECT
+        wect = WECT(directions, num_heights).eval().cuda()
+        compiled_wect = torch.compile(
+            wect,
+            backend="inductor",
+            mode="max-autotune",
+            dynamic=True
+        )
+
+        # Warm-up
+        for _ in range(20):
+            _ = compiled_wect(cmplx)
+        torch.cuda.synchronize()
+
+        start.record()
+        values = compiled_wect(cmplx)
+        end.record()
+        torch.cuda.synchronize()
+
+        result.computation_time = start.elapsed_time(end) / 1000.0
+        result.vectorization_time = 0.0
+        result.value = values  # stays on GPU
+        return result
+
+
+class PyECT_Compiled_WECT_MPS_Implementation(I_Implementation):
+
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1):
+        result = ImplementationResult()
+        result.device_used = "mps"
+
+        torch.set_grad_enabled(False)
+
+        data = data.to("mps")
+        directions = directions.to("mps")
+
+        # Construct complex
+        torch.mps.synchronize()
+        t0 = time.perf_counter()
+        cmplx = weighted_freudenthal(data)
+        torch.mps.synchronize()
+        result.complex_construction_time = time.perf_counter() - t0
+
+        # Compile WECT
+        wect = WECT(directions, num_heights).eval().to("mps")
+        compiled_wect = torch.compile(
+            wect,
+            backend="inductor",
+            mode="max-autotune",
+            dynamic=True
+        )
+
+        # Warm-up
+        for _ in range(20):
+            _ = compiled_wect(cmplx)
+        torch.mps.synchronize()
+
+        t1 = time.perf_counter()
+        values = compiled_wect(cmplx)
+        torch.mps.synchronize()
+        result.computation_time = time.perf_counter() - t1
+
+        result.vectorization_time = 0.0
+        result.value = values.cpu()
+        return result
+
+
+######################################################################
+#                   COMPILED PYECT IMAGE-ECF IMPLEMENTATIONS
+######################################################################
+
+class PyECT_Compiled_Image_ECF_CPU_Implementation(I_Implementation):
+
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1):
+        result = ImplementationResult()
+        result.device_used = "cpu"
+
+        torch.set_grad_enabled(False)
+
+        ecf = Image_ECF_2D(num_heights).eval()
+        compiled_ecf = torch.compile(
+            ecf,
+            backend="inductor",
+            mode="max-autotune",
+            dynamic=False
+        )
+
+        # Warm-up
+        for _ in range(20):
+            _ = compiled_ecf(data)
+
+        t0 = time.perf_counter()
+        ecf_vals = compiled_ecf(data)
+        result.computation_time = time.perf_counter() - t0
+
+        result.complex_construction_time = 0.0
+        result.vectorization_time = 0.0
+        result.value = ecf_vals.cpu()
+        return result
+
+
+class PyECT_Compiled_Image_ECF_CUDA_Implementation(I_Implementation):
+
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1):
+        result = ImplementationResult()
+        result.device_used = "cuda"
+
+        torch.set_grad_enabled(False)
+
+        img = (data - data.min()) / (data.max() - data.min())
+        img = img.cuda()
+
+        ecf = Image_ECF_2D(num_heights).eval().cuda()
+        compiled_ecf = torch.compile(
+            ecf,
+            backend="inductor",
+            mode="max-autotune",
+            dynamic=False
+        )
+
+        for _ in range(20):
+            _ = compiled_ecf(img)
+        torch.cuda.synchronize()
+
+        start = torch.cuda.Event(enable_timing=True)
+        end = torch.cuda.Event(enable_timing=True)
+
+        start.record()
+        vals = compiled_ecf(img)
+        end.record()
+        torch.cuda.synchronize()
+
+        result.computation_time = start.elapsed_time(end) / 1000.0
+        result.complex_construction_time = 0.0
+        result.vectorization_time = 0.0
+        result.value = vals  # keep on GPU
+        return result
+
+
+class PyECT_Compiled_Image_ECF_MPS_Implementation(I_Implementation):
+
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1):
+        result = ImplementationResult()
+        result.device_used = "mps"
+
+        torch.set_grad_enabled(False)
+
+        img = (data - data.min()) / (data.max() - data.min())
+        img = img.to("mps")
+
+        ecf = Image_ECF_2D(num_heights).eval().to("mps")
+        compiled_ecf = torch.compile(
+            ecf,
+            backend="inductor",
+            mode="max-autotune",
+            dynamic=False
+        )
+
+        # Warm-up
+        for _ in range(20):
+            _ = compiled_ecf(img)
+        torch.mps.synchronize()
+
+        t0 = time.perf_counter()
+        vals = compiled_ecf(img)
+        torch.mps.synchronize()
+        result.computation_time = time.perf_counter() - t0
+
+        result.complex_construction_time = 0.0
+        result.vectorization_time = 0.0
+        result.value = vals.cpu()
         return result

@@ -9,12 +9,18 @@ from usecase.experiment import ExperimentRunner
 from usecase.interfaces import I_Implementation
 
 from framework.implementation.pyect import (
-    PyECT_WECT_CPU_Implementation,
-    PyECT_WECT_CUDA_Implementation,
-    PyECT_WECT_MPS_Implementation,
-    PyECT_Image_ECF_CPU_Implementation,
-    PyECT_Image_ECF_CUDA_Implementation,
-    PyECT_Image_ECF_MPS_Implementation,
+    PyECT_Uncompiled_WECT_CPU_Implementation,
+    PyECT_Uncompiled_WECT_CUDA_Implementation,
+    PyECT_Uncompiled_WECT_MPS_Implementation,
+    PyECT_Uncompiled_Image_ECF_CPU_Implementation,
+    PyECT_Uncompiled_Image_ECF_CUDA_Implementation,
+    PyECT_Uncompiled_Image_ECF_MPS_Implementation,
+    PyECT_Compiled_WECT_CPU_Implementation,
+    PyECT_Compiled_WECT_CUDA_Implementation,
+    PyECT_Compiled_WECT_MPS_Implementation,
+    PyECT_Compiled_Image_ECF_CPU_Implementation,
+    PyECT_Compiled_Image_ECF_CUDA_Implementation,
+    PyECT_Compiled_Image_ECF_MPS_Implementation,
     direction_sampler_2d,
     direction_sampler_3d
 )
@@ -31,13 +37,19 @@ DATA_TYPES = [
 ]
 
 IMPLEMENTATION_METHODS = {
-    "wect_pyECT_cuda": PyECT_WECT_CUDA_Implementation,
-    "wect_pyECT_mps": PyECT_WECT_MPS_Implementation,
-    "wect_pyECT_cpu": PyECT_WECT_CPU_Implementation,
+    "wect_pyECT_uncompiled_cuda": PyECT_Uncompiled_WECT_CUDA_Implementation,
+    "wect_pyECT_uncompiled_mps": PyECT_Uncompiled_WECT_MPS_Implementation,
+    "wect_pyECT_uncompiled_cpu": PyECT_Uncompiled_WECT_CPU_Implementation,
+    "wect_pyECT_compiled_cpu": PyECT_Compiled_WECT_CPU_Implementation,
+    "wect_pyECT_compiled_cuda": PyECT_Compiled_WECT_CUDA_Implementation,
+    "wect_pyECT_compiled_mps": PyECT_Compiled_WECT_MPS_Implementation,
     "wect_eucalc_cpu": Eucalc_WECT_CPU_Implementation,
-    "ecf_pyECT_cuda": PyECT_Image_ECF_CUDA_Implementation,
-    "ecf_pyECT_mps": PyECT_Image_ECF_MPS_Implementation,
-    "ecf_pyECT_cpu": PyECT_Image_ECF_CPU_Implementation,
+    "ecf_pyECT_cuda": PyECT_Uncompiled_Image_ECF_CUDA_Implementation,
+    "ecf_pyECT_mps": PyECT_Uncompiled_Image_ECF_MPS_Implementation,
+    "ecf_pyECT_cpu": PyECT_Uncompiled_Image_ECF_CPU_Implementation,
+    "ecf_pyECT_compiled_cpu": PyECT_Compiled_Image_ECF_CPU_Implementation,
+    "ecf_pyECT_compiled_cuda": PyECT_Compiled_Image_ECF_CUDA_Implementation,
+    "ecf_pyECT_compiled_mps": PyECT_Compiled_Image_ECF_MPS_Implementation,
     "ecf_fast_topology_cpu": FastTopology_Image_ECF_CPU_Implementation,
 }
 
@@ -122,8 +134,6 @@ def parse_args():
 def main():
     args = parse_args()
     validate_args(args)
-
-    torch.set_grad_enabled(False)
 
     # determine implementation
     implementation = get_implementation(args.invariant, args.implementation_name, args.device)

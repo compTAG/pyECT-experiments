@@ -6,7 +6,8 @@ class ImplementationResult:
     vectorization_time: float
 
 IMPLEMENTATION_NAMES = [
-    "pyECT",
+    "pyECT_uncompiled",
+    "pyECT_compiled",
     "eucalc",
     "fast_topology",
     ]
