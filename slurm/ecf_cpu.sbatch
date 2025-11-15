@@ -9,7 +9,7 @@
 #SBATCH --partition=test                # queue partition to run the job in
 #SBATCH --cpus-per-task=1               # number of cores to allocate
 #SBATCH --mem=2G                        # ammount of Memory allocated
-#SBATCH --time=0-00:05:00               # maximum job run time in days-hours:minutes:secconds
+#SBATCH --time=0-00:59:00               # maximum job run time in days-hours:minutes:secconds
 #SBATCH --job-name=example              # job name
 #SBATCH --output=example-%j.out         # standard output from job
 #SBATCH --error=example-%j.err          # standard error from job
@@ -62,14 +62,15 @@ INVARIANT="ecf"
 IMPLEMENTATION_NAME="pyECT"
 DEVICE="cpu"
 DATASET="test_images_1024"
+CORES=1
 
 DIRECTIONS=(0)
 TIMESTEPS=(10 100 1000 10000)
 
 for NUM_DIRECTIONS in "${DIRECTIONS[@]}"; do
   for NUM_TIMESTEPS in "${TIMESTEPS[@]}"; do
-    
-    OUTPUT_PATH="results/${DATASET}/${INVARIANT}/${IMPLEMENTATION_NAME}/${NUM_DIRECTIONS}_dirs_${NUM_TIMESTEPS}_timesteps_${DEVICE}.csv"
+
+    OUTPUT_PATH="results/${DATASET}/${INVARIANT}/${IMPLEMENTATION_NAME}/${NUM_DIRECTIONS}_dirs_${NUM_TIMESTEPS}_timesteps_${DEVICE}_${CORES}_cores.csv"
 
     # ensure directory exists
     DIR_NAME=$(dirname "$OUTPUT_PATH")
@@ -86,7 +87,8 @@ for NUM_DIRECTIONS in "${DIRECTIONS[@]}"; do
       --num_directions="${NUM_DIRECTIONS}" \
       --num_timesteps="${NUM_TIMESTEPS}" \
       --device="${DEVICE}" \
-      --batch_size=1
+      --batch_size=1 \
+      --cores=${CORES}
 
   done
 done

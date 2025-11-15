@@ -22,7 +22,7 @@
 #SBATCH --gres=gpu:a100:1
 
 ## Maximum job run time. Format is days-HH:MM:SS.
-#SBATCH --time=0-00:05:00
+#SBATCH --time=0-00:59:00
 
 ## Set job name.
 #SBATCH --job-name=gpupriority-example
@@ -92,14 +92,15 @@ INVARIANT="ecf"
 IMPLEMENTATION_NAME="pyECT"
 DEVICE="cuda"
 DATASET="test_images_1024"
+CORES=1
 
 DIRECTIONS=(0)
 TIMESTEPS=(10 100 1000 10000)
 
 for NUM_DIRECTIONS in "${DIRECTIONS[@]}"; do
   for NUM_TIMESTEPS in "${TIMESTEPS[@]}"; do
-    
-    OUTPUT_PATH="results/${DATASET}/${INVARIANT}/${IMPLEMENTATION_NAME}/${NUM_DIRECTIONS}_dirs_${NUM_TIMESTEPS}_timesteps_${DEVICE}.csv"
+
+    OUTPUT_PATH="results/${DATASET}/${INVARIANT}/${IMPLEMENTATION_NAME}/${NUM_DIRECTIONS}_dirs_${NUM_TIMESTEPS}_timesteps_${DEVICE}_${CORES}_cores.csv"
 
     # ensure directory exists
     DIR_NAME=$(dirname "$OUTPUT_PATH")
@@ -116,7 +117,8 @@ for NUM_DIRECTIONS in "${DIRECTIONS[@]}"; do
       --num_directions="${NUM_DIRECTIONS}" \
       --num_timesteps="${NUM_TIMESTEPS}" \
       --device="${DEVICE}" \
-      --batch_size=1
+      --batch_size=1 \
+      --cores=${CORES}
 
   done
 done
