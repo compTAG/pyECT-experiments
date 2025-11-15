@@ -34,6 +34,8 @@ INVARIANT_TYPES = [
 
 DATA_TYPES = [
     "image",
+    "3d_mesh",
+    "3d_cubical_complex"
 ]
 
 IMPLEMENTATION_METHODS = {
@@ -112,7 +114,7 @@ def parse_args():
     parser.add_argument("--data_path", type=str, required=True,
                         help="Path to the compressed numpy (.npz) file containing images.")
     parser.add_argument("--data_type", choices=DATA_TYPES, required=True,
-                        help="Type of data (e.g., 'image', 'mesh').")
+                        help="Type of data (e.g., 'image', '3d_mesh', '3d_cubical_complex').")
     parser.add_argument("--invariant", choices=INVARIANT_TYPES, required=True,
                         help="Type of invariant to compute (e.g., 'wect', 'ecf').")
     parser.add_argument("--implementation_name", type=str, required=True,

@@ -4,7 +4,7 @@ import torch
 
 from usecase.interfaces import I_Implementation 
 from domain.implementation import ImplementationResult
-from pyect import WECT, weighted_freudenthal, sample_directions_2d, sample_directions_3d
+from pyect import WECT, weighted_freudenthal, sample_directions_2d, sample_directions_3d, mesh_to_complex
 
 def direction_sampler_2d(num_directions: int) -> torch.Tensor:
     return sample_directions_2d(num_directions)
@@ -17,19 +17,26 @@ def direction_sampler_3d(num_directions: int) -> torch.Tensor:
 ######################################################################
 class PyECT_Uncompiled_WECT_CPU_Implementation(I_Implementation):
 
-    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1) -> ImplementationResult:
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1, data_type: str = "image") -> ImplementationResult:
         result = ImplementationResult()
         result.device_used = "cpu"
 
         torch.set_grad_enabled(False)
 
         # 1. Construct complex
-        t0 = time.perf_counter()
-        cmplx = weighted_freudenthal(data)
-        result.complex_construction_time = time.perf_counter() - t0
+        if data_type == "image":
+            t0 = time.perf_counter()
+            cmplx = weighted_freudenthal(data)
+            result.complex_construction_time = time.perf_counter() - t0
+        elif data_type == "3d_mesh":
+            t0 = time.perf_counter()
+            cmplx = mesh_to_complex(data)
+            result.complex_construction_time = time.perf_counter() - t0
+        else:
+            raise NotImplementedError(f"Data type {data_type} not supported for WECT.")
 
         # 2. Compute WECT
-        wect = WECT(directions, num_heights)
+        wect = WECT(directions, num_heights).eval()
         t1 = time.perf_counter()
         values = wect(cmplx)
         result.computation_time = time.perf_counter() - t1
@@ -41,7 +48,7 @@ class PyECT_Uncompiled_WECT_CPU_Implementation(I_Implementation):
         return result
 
 class PyECT_Uncompiled_WECT_CUDA_Implementation(I_Implementation):
-    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1) -> ImplementationResult:
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1, data_type: str = "image") -> ImplementationResult:
         result = ImplementationResult()
         result.device_used = "cuda"
 
@@ -61,10 +68,17 @@ class PyECT_Uncompiled_WECT_CUDA_Implementation(I_Implementation):
             torch.cuda.synchronize()
             return output, start.elapsed_time(end) / 1000.0  # seconds
 
-        cmplx, t_complex = cuda_timing(lambda: weighted_freudenthal(data))
+        # 3D mesh support added
+        if data_type == "image":
+            cmplx, t_complex = cuda_timing(lambda: weighted_freudenthal(data))
+        elif data_type == "3d_mesh":
+            cmplx, t_complex = cuda_timing(lambda: mesh_to_complex(data))
+        else:
+            raise NotImplementedError(f"Data type {data_type} not supported for WECT.")
+
         result.complex_construction_time = t_complex
 
-        wect = WECT(directions, num_heights).cuda()
+        wect = WECT(directions, num_heights).eval().cuda()
 
         for _ in range(100):
             _ = wect(cmplx)
@@ -89,7 +103,7 @@ class PyECT_Uncompiled_WECT_CUDA_Implementation(I_Implementation):
 
 class PyECT_Uncompiled_WECT_MPS_Implementation(I_Implementation):
 
-    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1) -> ImplementationResult:
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1, data_type: str = "image") -> ImplementationResult:
         result = ImplementationResult()
         result.device_used = "mps"
 
@@ -101,13 +115,21 @@ class PyECT_Uncompiled_WECT_MPS_Implementation(I_Implementation):
         # 1. Construct complex
         torch.mps.synchronize()
         t0 = time.perf_counter()
-        cmplx = weighted_freudenthal(data)
+
+        # 3D mesh support added
+        if data_type == "image":
+            cmplx = weighted_freudenthal(data)
+        elif data_type == "3d_mesh":
+            cmplx = mesh_to_complex(data)
+        else:
+            raise NotImplementedError(f"Data type {data_type} not supported for WECT.")
+
         torch.mps.synchronize()
         result.complex_construction_time = time.perf_counter() - t0
 
         # 2. Construct WECT
         torch.mps.synchronize()
-        wect = WECT(directions, num_heights)
+        wect = WECT(directions, num_heights).eval()
 
         # warm-up
         for _ in range(100):
@@ -134,7 +156,7 @@ from pyect import Image_ECF_2D
 
 class PyECT_Uncompiled_Image_ECF_CPU_Implementation(I_Implementation):
 
-    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1) -> ImplementationResult:
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1, data_type: str = "image") -> ImplementationResult:
         result = ImplementationResult()
         result.device_used = "cpu"
 
@@ -158,21 +180,21 @@ class PyECT_Uncompiled_Image_ECF_CPU_Implementation(I_Implementation):
 
 class PyECT_Uncompiled_Image_ECF_CUDA_Implementation(I_Implementation):
 
-    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1) -> ImplementationResult:
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1, data_type: str = "image") -> ImplementationResult:
         result = ImplementationResult()
         result.device_used = "cuda"
 
         torch.set_grad_enabled(False)
 
         # Move data to GPU
-        img = img.cuda()
+        data = data.cuda()
 
         # Construct ECF object
         ecf = Image_ECF_2D(num_heights).cuda()
 
         # GPU warm-up
         for _ in range(100):
-            _ = ecf(img)
+            _ = ecf(data)
         torch.cuda.synchronize()
 
         # Timing with CUDA events
@@ -180,7 +202,7 @@ class PyECT_Uncompiled_Image_ECF_CUDA_Implementation(I_Implementation):
         end_event = torch.cuda.Event(enable_timing=True)
 
         start_event.record()
-        ecf_values = ecf(img)
+        ecf_values = ecf(data)
         end_event.record()
         torch.cuda.synchronize()
 
@@ -195,27 +217,27 @@ class PyECT_Uncompiled_Image_ECF_CUDA_Implementation(I_Implementation):
 
 class PyECT_Uncompiled_Image_ECF_MPS_Implementation(I_Implementation):
 
-    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1) -> ImplementationResult:
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1, data_type: str = "image") -> ImplementationResult:
         result = ImplementationResult()
         result.device_used = "mps"
 
         torch.set_grad_enabled(False)
 
         # Move to MPS
-        img = img.to("mps")
+        data = data.to("mps")
 
         # Construct ECF object
         ecf = Image_ECF_2D(num_heights)
 
         # Warm-up
         for _ in range(100):
-            _ = ecf(img)
+            _ = ecf(data)
 
         torch.mps.synchronize()
 
         # Timing
         t0 = time.perf_counter()
-        ecf_values = ecf(img)
+        ecf_values = ecf(data)
         torch.mps.synchronize()
         result.computation_time = time.perf_counter() - t0
 
@@ -231,7 +253,7 @@ class PyECT_Uncompiled_Image_ECF_MPS_Implementation(I_Implementation):
 
 class PyECT_Compiled_WECT_CPU_Implementation(I_Implementation):
 
-    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1):
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1, data_type: str = "image"):
         result = ImplementationResult()
         result.device_used = "cpu"
 
@@ -239,7 +261,15 @@ class PyECT_Compiled_WECT_CPU_Implementation(I_Implementation):
 
         # 1. Construct complex
         t0 = time.perf_counter()
-        cmplx = weighted_freudenthal(data)
+
+        # 3D mesh support added
+        if data_type == "image":
+            cmplx = weighted_freudenthal(data)
+        elif data_type == "3d_mesh":
+            cmplx = mesh_to_complex(data)
+        else:
+            raise NotImplementedError(f"Data type {data_type} not supported for WECT.")
+
         result.complex_construction_time = time.perf_counter() - t0
 
         # 2. Compiled WECT
@@ -267,7 +297,7 @@ class PyECT_Compiled_WECT_CPU_Implementation(I_Implementation):
 
 class PyECT_Compiled_WECT_CUDA_Implementation(I_Implementation):
 
-    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1):
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1, data_type: str = "image"):
         result = ImplementationResult()
         result.device_used = "cuda"
 
@@ -281,7 +311,15 @@ class PyECT_Compiled_WECT_CUDA_Implementation(I_Implementation):
         end = torch.cuda.Event(enable_timing=True)
 
         start.record()
-        cmplx = weighted_freudenthal(data)
+
+        # 3D mesh support added
+        if data_type == "image":
+            cmplx = weighted_freudenthal(data)
+        elif data_type == "3d_mesh":
+            cmplx = mesh_to_complex(data)
+        else:
+            raise NotImplementedError(f"Data type {data_type} not supported for WECT.")
+
         end.record()
         torch.cuda.synchronize()
         result.complex_construction_time = start.elapsed_time(end) / 1000.0
@@ -313,7 +351,7 @@ class PyECT_Compiled_WECT_CUDA_Implementation(I_Implementation):
 
 class PyECT_Compiled_WECT_MPS_Implementation(I_Implementation):
 
-    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1):
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1, data_type: str = "image"):
         result = ImplementationResult()
         result.device_used = "mps"
 
@@ -325,7 +363,15 @@ class PyECT_Compiled_WECT_MPS_Implementation(I_Implementation):
         # Construct complex
         torch.mps.synchronize()
         t0 = time.perf_counter()
-        cmplx = weighted_freudenthal(data)
+
+        # 3D mesh support added
+        if data_type == "image":
+            cmplx = weighted_freudenthal(data)
+        elif data_type == "3d_mesh":
+            cmplx = mesh_to_complex(data)
+        else:
+            raise NotImplementedError(f"Data type {data_type} not supported for WECT.")
+
         torch.mps.synchronize()
         result.complex_construction_time = time.perf_counter() - t0
 
@@ -359,7 +405,7 @@ class PyECT_Compiled_WECT_MPS_Implementation(I_Implementation):
 
 class PyECT_Compiled_Image_ECF_CPU_Implementation(I_Implementation):
 
-    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1):
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1, data_type: str = "image"):
         result = ImplementationResult()
         result.device_used = "cpu"
 
@@ -389,14 +435,13 @@ class PyECT_Compiled_Image_ECF_CPU_Implementation(I_Implementation):
 
 class PyECT_Compiled_Image_ECF_CUDA_Implementation(I_Implementation):
 
-    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1):
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1, data_type: str = "image"):
         result = ImplementationResult()
         result.device_used = "cuda"
 
         torch.set_grad_enabled(False)
 
-        img = (data - data.min()) / (data.max() - data.min())
-        img = img.cuda()
+        data = data.cuda()
 
         ecf = Image_ECF_2D(num_heights).eval().cuda()
         compiled_ecf = torch.compile(
@@ -407,14 +452,14 @@ class PyECT_Compiled_Image_ECF_CUDA_Implementation(I_Implementation):
         )
 
         for _ in range(20):
-            _ = compiled_ecf(img)
+            _ = compiled_ecf(data)
         torch.cuda.synchronize()
 
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
 
         start.record()
-        vals = compiled_ecf(img)
+        vals = compiled_ecf(data)
         end.record()
         torch.cuda.synchronize()
 
@@ -427,14 +472,13 @@ class PyECT_Compiled_Image_ECF_CUDA_Implementation(I_Implementation):
 
 class PyECT_Compiled_Image_ECF_MPS_Implementation(I_Implementation):
 
-    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1):
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int = 1, data_type: str = "image"):
         result = ImplementationResult()
         result.device_used = "mps"
 
         torch.set_grad_enabled(False)
 
-        img = (data - data.min()) / (data.max() - data.min())
-        img = img.to("mps")
+        data = data.to("mps")
 
         ecf = Image_ECF_2D(num_heights).eval().to("mps")
         compiled_ecf = torch.compile(
@@ -446,11 +490,11 @@ class PyECT_Compiled_Image_ECF_MPS_Implementation(I_Implementation):
 
         # Warm-up
         for _ in range(20):
-            _ = compiled_ecf(img)
+            _ = compiled_ecf(data)
         torch.mps.synchronize()
 
         t0 = time.perf_counter()
-        vals = compiled_ecf(img)
+        vals = compiled_ecf(data)
         torch.mps.synchronize()
         result.computation_time = time.perf_counter() - t0
 

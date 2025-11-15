@@ -7,5 +7,5 @@ class I_Implementation():
     def __init__(self):
         pass
 
-    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int) -> ImplementationResult:
+    def compute(self, data, directions: torch.Tensor, num_heights: int, cores: int, data_type: str) -> ImplementationResult:
         pass
