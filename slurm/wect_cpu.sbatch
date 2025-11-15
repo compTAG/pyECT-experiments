@@ -6,7 +6,7 @@
 ## Basic parameters
 ##
 #SBATCH --account=group-brittanyfasy     	# specify the account to use if using a priority partition
-#SBATCH --partition=priority                # queue partition to run the job in
+#SBATCH --partition=test                # queue partition to run the job in
 #SBATCH --cpus-per-task=1               # number of cores to allocate
 #SBATCH --mem=2G                        # ammount of Memory allocated
 #SBATCH --time=0-00:59:00               # maximum job run time in days-hours:minutes:secconds

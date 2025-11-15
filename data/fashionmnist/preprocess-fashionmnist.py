@@ -18,6 +18,9 @@ def load_and_transform_images(csv_file_path: str) -> np.ndarray:
     # 1. Load the CSV file
     df = pd.read_csv(csv_file_path)
 
+    # sample 1000 images
+    df = df.sample(n=1000, random_state=42).reset_index(drop=True)
+
     # 2. Forget the 'label' column and select only pixel data
     # Pixel data columns start from 'pixel1' up to 'pixel784'
     # We use .iloc to select all rows and all columns *except* the first one (index 0)
