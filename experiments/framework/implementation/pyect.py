@@ -148,7 +148,7 @@ class PyECT_Uncompiled_WECT_MPS_Implementation(I_Implementation):
         return result
 
 
-from pyect import Image_ECF_2D
+from pyect import Image_ECF_2D, Image_ECF_3D
 
 ######################################################################
 #                 UNCOMPILED PYECT IMAGE-ECF IMPLEMENTATIONS
@@ -161,6 +161,17 @@ class PyECT_Uncompiled_Image_ECF_CPU_Implementation(I_Implementation):
         result.device_used = "cpu"
 
         torch.set_grad_enabled(False)
+
+        if data_type != "image" and data_type != "3d_cubical_complex":
+            raise NotImplementedError(f"Data type {data_type} not supported for Image-ECF.")
+
+        # check if 2d or 3d image
+        if data.dim() == 2:
+            ecf = Image_ECF_2D(num_heights).eval()
+        elif data.dim() == 3:
+            ecf = Image_ECF_3D(num_heights).eval()
+        else:
+            raise NotImplementedError(f"Data type {data_type} not supported for Image-ECF.")
 
         # Construct ECF object (negligible time, counted as computation)
         ecf = Image_ECF_2D(num_heights)
@@ -189,8 +200,16 @@ class PyECT_Uncompiled_Image_ECF_CUDA_Implementation(I_Implementation):
         # Move data to GPU
         data = data.cuda()
 
-        # Construct ECF object
-        ecf = Image_ECF_2D(num_heights).cuda()
+        if data_type != "image" and data_type != "3d_cubical_complex":
+            raise NotImplementedError(f"Data type {data_type} not supported for Image-ECF.")
+
+        # check if 2d or 3d image
+        if data.dim() == 2:
+            ecf = Image_ECF_2D(num_heights).eval()
+        elif data.dim() == 3:
+            ecf = Image_ECF_3D(num_heights).eval()
+        else:
+            raise NotImplementedError(f"Data type {data_type} not supported for Image-ECF.")
 
         # GPU warm-up
         for _ in range(100):
@@ -226,8 +245,16 @@ class PyECT_Uncompiled_Image_ECF_MPS_Implementation(I_Implementation):
         # Move to MPS
         data = data.to("mps")
 
-        # Construct ECF object
-        ecf = Image_ECF_2D(num_heights)
+        if data_type != "image" and data_type != "3d_cubical_complex":
+            raise NotImplementedError(f"Data type {data_type} not supported for Image-ECF.")
+
+        # check if 2d or 3d image
+        if data.dim() == 2:
+            ecf = Image_ECF_2D(num_heights).eval()
+        elif data.dim() == 3:
+            ecf = Image_ECF_3D(num_heights).eval()
+        else:
+            raise NotImplementedError(f"Data type {data_type} not supported for Image-ECF.")
 
         # Warm-up
         for _ in range(100):
@@ -411,7 +438,17 @@ class PyECT_Compiled_Image_ECF_CPU_Implementation(I_Implementation):
 
         torch.set_grad_enabled(False)
 
-        ecf = Image_ECF_2D(num_heights).eval()
+        if data_type != "image" and data_type != "3d_cubical_complex":
+            raise NotImplementedError(f"Data type {data_type} not supported for Image-ECF.")
+
+        # check if 2d or 3d image
+        if data.dim() == 2:
+            ecf = Image_ECF_2D(num_heights).eval()
+        elif data.dim() == 3:
+            ecf = Image_ECF_3D(num_heights).eval()
+        else:
+            raise NotImplementedError(f"Data type {data_type} not supported for Image-ECF.")
+        
         compiled_ecf = torch.compile(
             ecf,
             backend="inductor",
@@ -443,7 +480,17 @@ class PyECT_Compiled_Image_ECF_CUDA_Implementation(I_Implementation):
 
         data = data.cuda()
 
-        ecf = Image_ECF_2D(num_heights).eval().cuda()
+        if data_type != "image" and data_type != "3d_cubical_complex":
+            raise NotImplementedError(f"Data type {data_type} not supported for Image-ECF.")
+
+        # check if 2d or 3d image
+        if data.dim() == 2:
+            ecf = Image_ECF_2D(num_heights).eval()
+        elif data.dim() == 3:
+            ecf = Image_ECF_3D(num_heights).eval()
+        else:
+            raise NotImplementedError(f"Data type {data_type} not supported for Image-ECF.")
+        
         compiled_ecf = torch.compile(
             ecf,
             backend="inductor",
@@ -480,7 +527,17 @@ class PyECT_Compiled_Image_ECF_MPS_Implementation(I_Implementation):
 
         data = data.to("mps")
 
-        ecf = Image_ECF_2D(num_heights).eval().to("mps")
+        if data_type != "image" and data_type != "3d_cubical_complex":
+            raise NotImplementedError(f"Data type {data_type} not supported for Image-ECF.")
+
+        # check if 2d or 3d image
+        if data.dim() == 2:
+            ecf = Image_ECF_2D(num_heights).eval()
+        elif data.dim() == 3:
+            ecf = Image_ECF_3D(num_heights).eval()
+        else:
+            raise NotImplementedError(f"Data type {data_type} not supported for Image-ECF.")
+        
         compiled_ecf = torch.compile(
             ecf,
             backend="inductor",
