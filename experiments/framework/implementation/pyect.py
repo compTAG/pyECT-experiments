@@ -4,7 +4,7 @@ import torch
 
 from usecase.interfaces import I_Implementation 
 from domain.implementation import ImplementationResult
-from pyect import WECT, weighted_freudenthal, sample_directions_2d, sample_directions_3d, mesh_to_complex
+from pyect import WECT, weighted_cubical, sample_directions_2d, sample_directions_3d, mesh_to_complex
 
 def direction_sampler_2d(num_directions: int) -> torch.Tensor:
     return sample_directions_2d(num_directions)
@@ -26,7 +26,7 @@ class PyECT_Uncompiled_WECT_CPU_Implementation(I_Implementation):
         # 1. Construct complex
         if data_type == "image":
             t0 = time.perf_counter()
-            cmplx = weighted_freudenthal(data)
+            cmplx = weighted_cubical(data)
             result.complex_construction_time = time.perf_counter() - t0
         elif data_type == "3d_mesh":
             t0 = time.perf_counter()
@@ -70,7 +70,7 @@ class PyECT_Uncompiled_WECT_CUDA_Implementation(I_Implementation):
 
         # 3D mesh support added
         if data_type == "image":
-            cmplx, t_complex = cuda_timing(lambda: weighted_freudenthal(data))
+            cmplx, t_complex = cuda_timing(lambda: weighted_cubical(data))
         elif data_type == "3d_mesh":
             cmplx, t_complex = cuda_timing(lambda: mesh_to_complex(data))
         else:
@@ -118,7 +118,7 @@ class PyECT_Uncompiled_WECT_MPS_Implementation(I_Implementation):
 
         # 3D mesh support added
         if data_type == "image":
-            cmplx = weighted_freudenthal(data)
+            cmplx = weighted_cubical(data)
         elif data_type == "3d_mesh":
             cmplx = mesh_to_complex(data)
         else:
@@ -291,7 +291,7 @@ class PyECT_Compiled_WECT_CPU_Implementation(I_Implementation):
 
         # 3D mesh support added
         if data_type == "image":
-            cmplx = weighted_freudenthal(data)
+            cmplx = weighted_cubical(data)
         elif data_type == "3d_mesh":
             cmplx = mesh_to_complex(data)
         else:
@@ -341,7 +341,7 @@ class PyECT_Compiled_WECT_CUDA_Implementation(I_Implementation):
 
         # 3D mesh support added
         if data_type == "image":
-            cmplx = weighted_freudenthal(data)
+            cmplx = weighted_cubical(data)
         elif data_type == "3d_mesh":
             cmplx = mesh_to_complex(data)
         else:
@@ -393,7 +393,7 @@ class PyECT_Compiled_WECT_MPS_Implementation(I_Implementation):
 
         # 3D mesh support added
         if data_type == "image":
-            cmplx = weighted_freudenthal(data)
+            cmplx = weighted_cubical(data)
         elif data_type == "3d_mesh":
             cmplx = mesh_to_complex(data)
         else:
