@@ -66,7 +66,6 @@ class DECT_WECT_CUDA_Implementation(I_Implementation):
         data = data.cuda()
         directions = directions.cuda()
 
-        # 1. Complex construction (GPU)
         start_event = torch.cuda.Event(enable_timing=True)
         end_event = torch.cuda.Event(enable_timing=True)
         start_event.record()
@@ -89,7 +88,18 @@ class DECT_WECT_CUDA_Implementation(I_Implementation):
 
         v = directions.T.contiguous()
 
-        # 2. Compute DECT
+        # warmup step
+        for _ in range(10):  # adjust number if needed
+            _ = compute_ect(
+                x,
+                v=v,
+                radius=radius,
+                resolution=num_heights,
+                scale=1,
+                ect_fn=indicator
+            )
+        torch.cuda.synchronize()
+
         start_event.record()
         values = compute_ect(
             x,
@@ -104,7 +114,7 @@ class DECT_WECT_CUDA_Implementation(I_Implementation):
 
         result.computation_time = start_event.elapsed_time(end_event) / 1000.0
         result.vectorization_time = 0.0
-        result.value = values  # keep on GPU
+        result.value = values
         return result
 
 class DECT_WECT_MPS_Implementation(I_Implementation):
