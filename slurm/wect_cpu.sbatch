@@ -20,7 +20,7 @@ date                                    # print out the date
 echo "hello from $(hostname -s)"        # print a message from the compute node
 date                                    # print the date again
 
-module load python-isal/0.11.0-GCCcore-10.3.0
+module load Python/3.10.8-GCCcore-12.2.0
 
 # Clone the latest version of the pyECT-experiments repo
 if [ ! -d "$HOME/pyECT-experiments" ]; then

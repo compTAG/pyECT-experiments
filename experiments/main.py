@@ -25,6 +25,11 @@ from framework.implementation.pyect import (
     direction_sampler_3d
 )
 from framework.implementation.eucalc_cpu import Eucalc_WECT_CPU_Implementation
+from framework.implementation.dect import (
+    DECT_WECT_CPU_Implementation,
+    DECT_WECT_CUDA_Implementation,
+    DECT_WECT_MPS_Implementation
+)
 from framework.implementation.fast_topology import FastTopology_Image_ECF_CPU_Implementation
 
 INVARIANT_TYPES = [
@@ -46,6 +51,9 @@ IMPLEMENTATION_METHODS = {
     "wect_pyECT_compiled_cuda": PyECT_Compiled_WECT_CUDA_Implementation,
     "wect_pyECT_compiled_mps": PyECT_Compiled_WECT_MPS_Implementation,
     "wect_eucalc_cpu": Eucalc_WECT_CPU_Implementation,
+    "wect_dect_cpu": DECT_WECT_CPU_Implementation,
+    "wect_dect_cuda": DECT_WECT_CUDA_Implementation,
+    "wect_dect_mps": DECT_WECT_MPS_Implementation,
     "ecf_pyECT_uncompiled_cuda": PyECT_Uncompiled_Image_ECF_CUDA_Implementation,
     "ecf_pyECT_uncompiled_mps": PyECT_Uncompiled_Image_ECF_MPS_Implementation,
     "ecf_pyECT_uncompiled_cpu": PyECT_Uncompiled_Image_ECF_CPU_Implementation,

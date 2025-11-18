@@ -6,3 +6,4 @@ gudhi
 opencv-python
 Pillow
 trimesh
+git+https://github.com/aidos-lab/dect.git

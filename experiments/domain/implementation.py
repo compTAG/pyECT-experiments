@@ -9,5 +9,6 @@ IMPLEMENTATION_NAMES = [
     "pyECT_uncompiled",
     "pyECT_compiled",
     "eucalc",
+    "dect",
     "fast_topology",
     ]

@@ -12,6 +12,9 @@
 # compiled binaries
 *.so
 
+# build directories
+build/
+
 # python
 __pycache__/
 
