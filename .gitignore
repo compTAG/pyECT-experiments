@@ -8,6 +8,7 @@
 *.csv
 *-ubyte
 *.JPEG
+*.pdf
 
 # compiled binaries
 *.so
