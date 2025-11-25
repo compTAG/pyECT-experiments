@@ -18,6 +18,7 @@ class ExperimentRunner:
         self.num_timesteps = params.num_timesteps
         self.output_path = params.output_path
         self.cores = params.cores
+        self.data_type = params.data_type
 
         # store implementation and direction sampler
         self.implementation = implementation
@@ -31,10 +32,16 @@ class ExperimentRunner:
             dirs = None  # Other variants do not use directions
 
         # load data
-        npz_data = np.load(self.data_path, allow_pickle=True)
-        all_images = npz_data['images']  # shape: (num_images, H, W)
-        num_images = all_images.shape[0]
-        print(f"Found {num_images} images in {self.data_path}")
+        if self.data_type == "image" or self.data_type == "3d_cubical_complex":
+            npz_data = np.load(self.data_path, allow_pickle=True)
+            all_data = npz_data['images']  # shape: (num_dps, H, W)
+            num_dps = all_data.shape[0]
+            print(f"Found {num_dps} images in {self.data_path}")
+        elif self.data_type == "3d_mesh":
+            all_data = [self.data_path for _ in range(10)]
+            num_dps = len(all_data)
+        else:
+            raise ValueError(f"Unknown data type: {self.data_type}")
 
         # write header to output file
         with open(self.output_path, "w") as f_out:
@@ -54,14 +61,17 @@ class ExperimentRunner:
             f_out.write(",".join(header) + "\n")
 
         # iterate over data, compute the results and write to output file
-        for start_idx in tqdm(range(0, num_images, self.batch_size)):
-            end_idx = min(start_idx + self.batch_size, num_images)
-            batch_images = all_images[start_idx:end_idx]
+        for start_idx in tqdm(range(0, num_dps, self.batch_size)):
+            end_idx = min(start_idx + self.batch_size, num_dps)
+            batch_images = all_data[start_idx:end_idx]
 
-            for i, img_np in enumerate(batch_images):
-                img_tensor = torch.tensor(img_np, dtype=torch.float32).to(self.device)
+            for i, dp in enumerate(batch_images):
+                if self.data_type == "image" or self.data_type == "3d_cubical_complex":
+                    data = torch.tensor(dp, dtype=torch.float32).to(self.device)
+                elif self.data_type == "3d_mesh":
+                    data = dp  # For meshes, pass the file path directly
 
-                result = self.implementation.compute(img_tensor, dirs, self.num_timesteps, self.cores)
+                result = self.implementation.compute(data, dirs, self.num_timesteps, self.cores, self.data_type)
 
                 with open(self.output_path, "a") as f_out:
                     row = [

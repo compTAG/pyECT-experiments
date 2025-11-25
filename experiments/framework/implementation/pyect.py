@@ -30,7 +30,7 @@ class PyECT_Uncompiled_WECT_CPU_Implementation(I_Implementation):
             result.complex_construction_time = time.perf_counter() - t0
         elif data_type == "3d_mesh":
             t0 = time.perf_counter()
-            cmplx = mesh_to_complex(data)
+            cmplx = mesh_to_complex(data, torch.device("cpu"))
             result.complex_construction_time = time.perf_counter() - t0
         else:
             raise NotImplementedError(f"Data type {data_type} not supported for WECT.")
@@ -55,8 +55,16 @@ class PyECT_Uncompiled_WECT_CUDA_Implementation(I_Implementation):
         torch.set_grad_enabled(False)
 
         # ensure all tensors are on GPU
-        data = data.cuda()
+        if type(data) == torch.Tensor:
+            data = data.cuda()
+        elif type(data) == str:
+            # our data type is a file path
+            pass
+        else:
+            raise NotImplementedError("Data input type not supported for implementation.")
+        
         directions = directions.cuda()
+        
 
         # Utility to time GPU steps with CUDA events
         def cuda_timing(fn):
@@ -72,7 +80,7 @@ class PyECT_Uncompiled_WECT_CUDA_Implementation(I_Implementation):
         if data_type == "image":
             cmplx, t_complex = cuda_timing(lambda: weighted_cubical(data))
         elif data_type == "3d_mesh":
-            cmplx, t_complex = cuda_timing(lambda: mesh_to_complex(data))
+            cmplx, t_complex = cuda_timing(lambda: mesh_to_complex(data, torch.device("cuda")))
         else:
             raise NotImplementedError(f"Data type {data_type} not supported for WECT.")
 
@@ -110,7 +118,15 @@ class PyECT_Uncompiled_WECT_MPS_Implementation(I_Implementation):
         torch.set_grad_enabled(False)
 
         directions = directions.to("mps")
-        data = data.to("mps")
+        # ensure all tensors are on GPU
+        if type(data) == torch.Tensor:
+            data = data.to("mps")
+        elif type(data) == str:
+            # our data type is a file path
+            pass
+        else:
+            raise NotImplementedError("Data input type not supported for implementation.")
+    
 
         # 1. Construct complex
         torch.mps.synchronize()
@@ -120,7 +136,7 @@ class PyECT_Uncompiled_WECT_MPS_Implementation(I_Implementation):
         if data_type == "image":
             cmplx = weighted_cubical(data)
         elif data_type == "3d_mesh":
-            cmplx = mesh_to_complex(data)
+            cmplx = mesh_to_complex(data, torch.device("mps"))
         else:
             raise NotImplementedError(f"Data type {data_type} not supported for WECT.")
 
@@ -293,7 +309,7 @@ class PyECT_Compiled_WECT_CPU_Implementation(I_Implementation):
         if data_type == "image":
             cmplx = weighted_cubical(data)
         elif data_type == "3d_mesh":
-            cmplx = mesh_to_complex(data)
+            cmplx = mesh_to_complex(data, torch.device("cpu"))
         else:
             raise NotImplementedError(f"Data type {data_type} not supported for WECT.")
 
@@ -330,7 +346,15 @@ class PyECT_Compiled_WECT_CUDA_Implementation(I_Implementation):
 
         torch.set_grad_enabled(False)
 
-        data = data.cuda()
+        # ensure all tensors are on GPU
+        if type(data) == torch.Tensor:
+            data = data.cuda()
+        elif type(data) == str:
+            # our data type is a file path
+            pass
+        else:
+            raise NotImplementedError("Data input type not supported for implementation.")
+        
         directions = directions.cuda()
 
         # Complex construction
@@ -343,7 +367,7 @@ class PyECT_Compiled_WECT_CUDA_Implementation(I_Implementation):
         if data_type == "image":
             cmplx = weighted_cubical(data)
         elif data_type == "3d_mesh":
-            cmplx = mesh_to_complex(data)
+            cmplx = mesh_to_complex(data, torch.device("cuda"))
         else:
             raise NotImplementedError(f"Data type {data_type} not supported for WECT.")
 
@@ -384,7 +408,15 @@ class PyECT_Compiled_WECT_MPS_Implementation(I_Implementation):
 
         torch.set_grad_enabled(False)
 
-        data = data.to("mps")
+        # ensure all tensors are on GPU
+        if type(data) == torch.Tensor:
+            data = data.to("mps")
+        elif type(data) == str:
+            # our data type is a file path
+            pass
+        else:
+            raise NotImplementedError("Data input type not supported for implementation.")
+        
         directions = directions.to("mps")
 
         # Construct complex
@@ -395,7 +427,7 @@ class PyECT_Compiled_WECT_MPS_Implementation(I_Implementation):
         if data_type == "image":
             cmplx = weighted_cubical(data)
         elif data_type == "3d_mesh":
-            cmplx = mesh_to_complex(data)
+            cmplx = mesh_to_complex(data, torch.device("mps"))
         else:
             raise NotImplementedError(f"Data type {data_type} not supported for WECT.")
 

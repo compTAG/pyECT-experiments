@@ -9,10 +9,7 @@ IMAGE_DIR = 'images'
 # The name of the output NPZ file
 OUTPUT_FILE = '../imagenet.npz' # Changed output file name to reflect padding
 
-# Padding value: 0.0 (black) is standard for normalized images
-# Since we normalize pixels to 0.0-1.0, 0.0 is the appropriate pad value.
-PADDING_VALUE = 0.0
-
+PADDING_VALUE = 1.0
 
 def get_max_dimensions(directory: str) -> Tuple[int, int]:
     """
@@ -131,4 +128,4 @@ if __name__ == "__main__":
             )
 
             # 3. Save the transformed images
-            save_images_to_npz(processed_images, OUTPUT_FILE)
+            # save_images_to_npz(processed_images, OUTPUT_FILE)

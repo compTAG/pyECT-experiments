@@ -8,6 +8,8 @@
 *.csv
 *-ubyte
 *.JPEG
+*.obj
+*.ply
 *.pdf
 
 # compiled binaries
