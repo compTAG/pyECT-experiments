@@ -6,7 +6,7 @@
 ## All other lines are read by the shell.
 
 ## Specify the account to use; you must use your priority account.
-#SBATCH --account=priority-brittanyfasy
+#SBATCH --account=priority-
 
 ## Use the gpupriority partition.
 #SBATCH --partition=gpupriority
@@ -33,7 +33,7 @@
 #SBATCH --error=%x-%j.err
 
 ## Remove one # and fill out the following lines if you want to receive emails.
-##SBATCH --mail-user=eli.quist@student.montana.edu      # enter your email to recieve email notifications
+##SBATCH --mail-user=     # enter your email to recieve email notifications
 ##SBATCH --mail-type=ALL                 # specify conditions on which to recieve emails
 
 ## Run 'man sbatch' for more information on the options above.

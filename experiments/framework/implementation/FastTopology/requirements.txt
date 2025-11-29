@@ -1,4 +1,0 @@
-gudhi
-numpy
-opencv-python
-Pillow

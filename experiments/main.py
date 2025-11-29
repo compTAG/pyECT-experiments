@@ -120,7 +120,7 @@ def validate_args(args) -> None:
 def parse_args():
     parser = argparse.ArgumentParser(description="Run WECT experiments on image data.")
     parser.add_argument("--data_path", type=str, required=True,
-                        help="Path to the compressed numpy (.npz) file containing images.")
+                        help="Path to the compressed numpy (.npz) or OBJ (.obj) file containing images or 3D meshes.")
     parser.add_argument("--data_type", choices=DATA_TYPES, required=True,
                         help="Type of data (e.g., 'image', '3d_mesh', '3d_cubical_complex').")
     parser.add_argument("--invariant", choices=INVARIANT_TYPES, required=True,
