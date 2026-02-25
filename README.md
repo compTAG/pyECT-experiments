@@ -6,6 +6,12 @@ virtual environment).
 Base requirements can be installed by running 
 `pip install -r requirements.txt` from the root of this repository.
 
+**Acknowledgements**
+Computational efforts were performed on the Tempest High Performance
+Computing System, operated and supported by University Information
+Technology Research Cyberinfrastructure (RRID:SCR\_026229)
+at Montana State University.
+
 ### Data Setup
 
 **Fashion-MNIST:**
