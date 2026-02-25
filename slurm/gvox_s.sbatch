@@ -65,11 +65,11 @@ fi
 cd $HOME/pyECT-experiments || exit 1
 
 ## create new virtualenv if doesn't exist, otherwise load 'pyect-experiments' env
-if [ ! -d "$HOME/pyect-experiments-env" ]; then
-    python3 -m venv "$HOME/pyect-experiments-env"
+if [ ! -d "$HOME/pyect-experiments-env-310" ]; then
+    python3 -m venv "$HOME/pyect-experiments-env-310"
 fi
 
-source "$HOME/pyect-experiments-env/bin/activate"
+source "$HOME/pyect-experiments-env-310/bin/activate"
 which python
 python --version
 which pip
