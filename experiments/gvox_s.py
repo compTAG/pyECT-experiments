@@ -97,18 +97,31 @@ CONFIGS_3D = [
 ]
 
 
-def run_2d(device: str) -> list:
+def make_ecf(ecf_cls, T: int, compiled: bool):
+    ecf = ecf_cls(T).eval()
+    if compiled:
+        ecf = torch.compile(
+            ecf,
+            backend="inductor",
+            mode="max-autotune",
+            dynamic=False,
+        )
+    return ecf
+
+
+def run_2d(device: str, compiled: bool) -> list:
     results = []
+    label = "compiled" if compiled else "uncompiled"
     header = f"{'Size':>10}  {'Thresholds':>10}  {'Median (ms)':>12}  {'GVox/s':>10}"
     print(f"\n{'='*len(header)}")
-    print(f"Image_ECF_2D  —  device: {device}")
+    print(f"Image_ECF_2D  ({label})  —  device: {device}")
     print("=" * len(header))
     print(header)
     print("-" * len(header))
 
     for H, W, T in CONFIGS_2D:
-        ecf = Image_ECF_2D(T).eval()
-        # pre allocate on device so there is no trasnfer in the timed region
+        ecf = make_ecf(Image_ECF_2D, T, compiled)
+        # pre-allocate on device so no transfer occurs in the timed region
         data = torch.rand(H, W, dtype=torch.float32, device=device)
 
         t_sec = measure_ecf_time(ecf, data, device)
@@ -117,24 +130,25 @@ def run_2d(device: str) -> list:
         size_str = f"{H}x{W}"
         print(f"{size_str:>10}  {T:>10}  {t_sec * 1000:>12.3f}  {gvox_s:>10.4f}")
         results.append(
-            {"dim": "2D", "size": size_str, "thresholds": T,
+            {"dim": "2D", "compiled": label, "size": size_str, "thresholds": T,
              "time_ms": round(t_sec * 1000, 4), "gvox_s": round(gvox_s, 6)}
         )
 
     return results
 
 
-def run_3d(device: str) -> list:
+def run_3d(device: str, compiled: bool) -> list:
     results = []
+    label = "compiled" if compiled else "uncompiled"
     header = f"{'Size':>14}  {'Thresholds':>10}  {'Median (ms)':>12}  {'GVox/s':>10}"
     print(f"\n{'='*len(header)}")
-    print(f"Image_ECF_3D  —  device: {device}")
+    print(f"Image_ECF_3D  ({label})  —  device: {device}")
     print("=" * len(header))
     print(header)
     print("-" * len(header))
 
     for D, H, W, T in CONFIGS_3D:
-        ecf = Image_ECF_3D(T).eval()
+        ecf = make_ecf(Image_ECF_3D, T, compiled)
         data = torch.rand(D, H, W, dtype=torch.float32, device=device)
 
         t_sec = measure_ecf_time(ecf, data, device)
@@ -143,7 +157,7 @@ def run_3d(device: str) -> list:
         size_str = f"{D}x{H}x{W}"
         print(f"{size_str:>14}  {T:>10}  {t_sec * 1000:>12.3f}  {gvox_s:>10.4f}")
         results.append(
-            {"dim": "3D", "size": size_str, "thresholds": T,
+            {"dim": "3D", "compiled": label, "size": size_str, "thresholds": T,
              "time_ms": round(t_sec * 1000, 4), "gvox_s": round(gvox_s, 6)}
         )
 
@@ -174,9 +188,11 @@ def main():
 
     torch.set_grad_enabled(False)
 
-    results = run_2d(device)
+    results = run_2d(device, compiled=False)
+    results += run_2d(device, compiled=True)
     if not args.skip_3d:
-        results += run_3d(device)
+        results += run_3d(device, compiled=False)
+        results += run_3d(device, compiled=True)
 
     # summary
     gvox_vals = [r["gvox_s"] for r in results]
@@ -191,7 +207,7 @@ def main():
     if args.output:
         with open(args.output, "w", newline="") as f:
             writer = csv.DictWriter(
-                f, fieldnames=["dim", "size", "thresholds", "time_ms", "gvox_s"]
+                f, fieldnames=["dim", "compiled", "size", "thresholds", "time_ms", "gvox_s"]
             )
             writer.writeheader()
             writer.writerows(results)
